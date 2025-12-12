@@ -4,19 +4,25 @@ from datetime import datetime
 executed_operations = []
 
 
-def read_json():
-    with open("operations.json", "r", encoding='utf-8') as file:
+def read_json(path="operations.json"):
+    executed_operations.clear()
+
+    with open(path, "r", encoding='utf-8') as file:
         operations = json.load(file)
-        executed = [op for op in operations if op["state"] == "EXECUTED"]
+        executed = [op for op in operations if op.get("state") == "EXECUTED"]
         sort_operations = sorted(executed, key=lambda x: x["date"], reverse=True)[:5]
         for operation in sort_operations:
             executed_operations.append(operation)
 
     return executed_operations
 
+
 def get_from_and_to_number(operation):
     def mask_number(data):
         if not data:
+            return "Нет данных"
+
+        if " " not in data:
             return "Нет данных"
 
         name, number = data.rsplit(" ", 1)
@@ -32,6 +38,7 @@ def get_from_and_to_number(operation):
 
     return mask_number(from_data), mask_number(to_data)
 
+
 def format_date(operation):
     date_str = operation["date"]
     date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
@@ -43,12 +50,11 @@ def amount_info(operation):
     currency = operation["operationAmount"]["currency"]["name"]
     return f"{amount} {currency}"
 
+
 def display_info(operation):
     date = format_date(operation)
     description = operation.get("description")
-
     from_user, to_user = get_from_and_to_number(operation)
-
     amount = amount_info(operation)
 
     print(f"""
@@ -57,10 +63,12 @@ def display_info(operation):
 {amount}
 """)
 
+
 def main():
     operations = read_json()
     for operation in operations:
         display_info(operation)
 
 
-main()
+if __name__ == "__main__":
+    main()
